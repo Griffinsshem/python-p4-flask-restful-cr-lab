@@ -17,10 +17,33 @@ db.init_app(app)
 api = Api(app)
 
 class Plants(Resource):
-    pass
+    def get(self):
+        plants = Plant.query.all()
+        return [plant.to_dict() for plant in plants], 200
+    
+    def post(self):
+        data = request.get_json()
+        name = data.get('name')
+        image = data.get('image')
+        price = data.get('price')
+
+        if not all([name, image, price]):
+            return {"error": "Missing required fields"}, 400
+        
+        new_plant = Plant(name=name, image=image, price=price)
+        db.session.add(new_plant)
+        db.session.commit()
+
+        return new_plant.to_dict(), 201
+
+api.add_resource(Plants, '/plants')
 
 class PlantByID(Resource):
-    pass
+    def get(self, plant_id):
+        plant = Plant.query.get_or_404(plant_id)
+        return plant.to_dict(), 200
+    
+api.add_resource(PlantByID, '/plants/<int:plant_id>')
         
 
 if __name__ == '__main__':
